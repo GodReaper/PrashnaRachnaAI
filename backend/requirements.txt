@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+pydantic
+python-multipart
+python-dotenv
+clerk-sdk-python
+langchain
+langchain-community
+chromadb
+psycopg2-binary
+sqlalchemy
+alembic
+crewai
+pyjwt
+cryptography
+requests
