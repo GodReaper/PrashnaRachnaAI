@@ -6,6 +6,8 @@ from config.database import get_db
 from app.services.user_service import UserService
 from app.services.document_service import DocumentService
 from app.services.file_service import file_storage_service
+from app.services.document_parser import document_parser
+from app.services.embedding_service import embedding_service
 from app.schemas.document import (
     DocumentUploadResponse, 
     DocumentListResponse,
@@ -203,5 +205,170 @@ async def get_supported_file_types():
         "limits": {
             "max_file_size_bytes": FileUploadValidation.MAX_FILE_SIZE,
             "max_file_size_mb": FileUploadValidation.MAX_FILE_SIZE / (1024 * 1024)
+        }
+    }
+
+@router.post("/{document_id}/parse")
+async def parse_document(
+    document_id: int,
+    current_user: Dict[str, Any] = Depends(clerk_auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Parse a document and store chunks in ChromaDB"""
+    
+    # Get user from database
+    user = UserService.get_user_by_clerk_id(db, current_user.get("user_id"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get document
+    document = DocumentService.get_document_by_id(db, document_id, user.id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Update status to processing
+    DocumentService.update_document_status(db, document_id, "processing")
+    
+    # Parse document
+    try:
+        result = document_parser.parse_document(
+            file_path=document.file_path,
+            document_id=document.id,
+            user_id=user.clerk_user_id,
+            db_session=db
+        )
+        return result
+    except Exception as e:
+        # Update status to failed
+        DocumentService.update_document_status(db, document_id, "failed", str(e))
+        raise HTTPException(status_code=500, detail=f"Document parsing failed: {str(e)}")
+
+@router.get("/{document_id}/chunks")
+async def get_document_chunks(
+    document_id: int,
+    current_user: Dict[str, Any] = Depends(clerk_auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get chunks summary for a document"""
+    
+    # Get user from database
+    user = UserService.get_user_by_clerk_id(db, current_user.get("user_id"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify document ownership
+    document = DocumentService.get_document_by_id(db, document_id, user.id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get chunks summary
+    summary = document_parser.get_document_chunks_summary(document_id)
+    return summary
+
+@router.get("/search/content")
+async def search_document_content(
+    q: str = Query(..., min_length=1, description="Search query for semantic search"),
+    document_id: Optional[int] = Query(None, description="Search within specific document"),
+    limit: int = Query(5, ge=1, le=20, description="Number of results to return"),
+    current_user: Dict[str, Any] = Depends(clerk_auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Semantic search within document content using ChromaDB"""
+    
+    # Get user from database
+    user = UserService.get_user_by_clerk_id(db, current_user.get("user_id"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # If searching specific document, verify ownership
+    if document_id:
+        document = DocumentService.get_document_by_id(db, document_id, user.id)
+        if not document:
+            raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Perform semantic search
+    results = document_parser.search_document_content(
+        query=q,
+        document_id=document_id,
+        user_id=user.clerk_user_id,
+        limit=limit
+    )
+    
+    return {
+        "query": q,
+        "document_id": document_id,
+        "total_results": len(results),
+        "results": results
+    }
+
+@router.get("/{document_id}/llm-ready-chunks")
+async def get_llm_ready_chunks(
+    document_id: int,
+    question_context: str = Query("generate educational questions", description="Context for question generation"),
+    max_chunks: int = Query(10, ge=1, le=20, description="Maximum chunks to return"),
+    current_user: Dict[str, Any] = Depends(clerk_auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get document chunks with embeddings optimized for LLM question generation"""
+    
+    # Get user from database
+    user = UserService.get_user_by_clerk_id(db, current_user.get("user_id"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify document ownership
+    document = DocumentService.get_document_by_id(db, document_id, user.id)
+    if not document:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Get LLM-ready chunks
+    chunks = document_parser.get_chunks_with_embeddings_for_llm(
+        document_id=document_id,
+        user_id=user.clerk_user_id,
+        question_context=question_context,
+        max_chunks=max_chunks
+    )
+    
+    return {
+        "document_id": document_id,
+        "question_context": question_context,
+        "total_chunks": len(chunks),
+        "chunks": chunks,
+        "embedding_info": {
+            "available_models": embedding_service.get_available_models(),
+            "default_model": embedding_service.default_model
+        }
+    }
+
+@router.get("/llm-ready-chunks/all")
+async def get_all_llm_ready_chunks(
+    question_context: str = Query("generate educational questions", description="Context for question generation"),
+    max_chunks: int = Query(20, ge=1, le=50, description="Maximum chunks to return"),
+    current_user: Dict[str, Any] = Depends(clerk_auth.get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get chunks from all user documents optimized for LLM question generation"""
+    
+    # Get user from database
+    user = UserService.get_user_by_clerk_id(db, current_user.get("user_id"))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get LLM-ready chunks from all documents
+    chunks = document_parser.get_chunks_with_embeddings_for_llm(
+        document_id=None,  # All documents
+        user_id=user.clerk_user_id,
+        question_context=question_context,
+        max_chunks=max_chunks
+    )
+    
+    return {
+        "user_id": user.clerk_user_id,
+        "question_context": question_context,
+        "total_chunks": len(chunks),
+        "chunks": chunks,
+        "embedding_info": {
+            "available_models": embedding_service.get_available_models(),
+            "default_model": embedding_service.default_model
         }
     } 

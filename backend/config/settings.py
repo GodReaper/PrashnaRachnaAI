@@ -27,6 +27,15 @@ class Settings:
     
     # CORS Configuration
     CORS_ORIGINS: list = ["http://localhost:3000"]  # Frontend URL
+    
+    # Ollama Configuration
+    OLLAMA_HOST: str = os.getenv("OLLAMA_HOST", "localhost")
+    OLLAMA_PORT: int = int(os.getenv("OLLAMA_PORT", "11434"))
+    OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", f"http://{os.getenv('OLLAMA_HOST', 'localhost')}:{os.getenv('OLLAMA_PORT', '11434')}")
+    
+    # Default models (user can override)
+    OLLAMA_DEFAULT_MODEL: str = os.getenv("OLLAMA_DEFAULT_MODEL", "deepseek-r1:1.5b")
+    OLLAMA_FALLBACK_MODEL: str = os.getenv("OLLAMA_FALLBACK_MODEL", "llama3.2:3b")
 
 # Global settings instance
 settings = Settings() 

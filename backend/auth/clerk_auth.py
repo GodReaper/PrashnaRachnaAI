@@ -1,9 +1,12 @@
 import jwt
 import requests
-from fastapi import HTTPException, Security
+from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Dict, Any
+from sqlalchemy.orm import Session
 from config.settings import settings
+from config.database import get_db
+from app.models.user import User
 
 # Initialize HTTP Bearer security scheme
 security = HTTPBearer()
@@ -54,6 +57,35 @@ class ClerkAuth:
         except Exception as e:
             raise HTTPException(status_code=401, detail=f"Token verification failed: {str(e)}")
     
+    def get_or_create_user(self, clerk_user_id: str, user_metadata: Dict[str, Any], db: Session) -> User:
+        """Get or create user in database based on Clerk user ID"""
+        # Check if user already exists
+        user = db.query(User).filter(User.clerk_user_id == clerk_user_id).first()
+        
+        if user:
+            # Update user information if needed
+            user.email = user_metadata.get("email", user.email)
+            user.first_name = user_metadata.get("first_name", user.first_name)
+            user.last_name = user_metadata.get("last_name", user.last_name)
+            user.profile_image_url = user_metadata.get("profile_image_url", user.profile_image_url)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Create new user
+            user = User(
+                clerk_user_id=clerk_user_id,
+                email=user_metadata.get("email"),
+                first_name=user_metadata.get("first_name"),
+                last_name=user_metadata.get("last_name"),
+                profile_image_url=user_metadata.get("profile_image_url"),
+                is_active=True
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        
+        return user
+    
     def get_current_user(self, credentials: HTTPAuthorizationCredentials = Security(security)) -> Dict[str, Any]:
         """Extract current user from JWT token"""
         if not credentials:
@@ -68,6 +100,15 @@ class ClerkAuth:
             "email": user_data.get("email"),
             "metadata": user_data
         }
+    
+    def get_current_user_db(self, credentials: HTTPAuthorizationCredentials = Security(security), db: Session = Depends(get_db)) -> User:
+        """Get current user and ensure they exist in database"""
+        user_data = self.get_current_user(credentials)
+        clerk_user_id = user_data["user_id"]
+        
+        # Get or create user in database
+        user = self.get_or_create_user(clerk_user_id, user_data.get("metadata", {}), db)
+        return user
 
 # Global auth instance
 clerk_auth = ClerkAuth() 

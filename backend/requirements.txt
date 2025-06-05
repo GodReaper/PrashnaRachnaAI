@@ -6,7 +6,23 @@ python-dotenv
 clerk-sdk-python
 langchain
 langchain-community
+langchain-text-splitters
 chromadb
+# Document parsing dependencies
+pypdf
+python-docx
+python-pptx
+unstructured[local-inference]
+# Embedding dependencies
+sentence-transformers
+numpy
+openai
+# LLM dependencies
+ollama
+langchain-ollama
+langchain-core
+httpx
+aiohttp
 psycopg2-binary
 sqlalchemy
 alembic

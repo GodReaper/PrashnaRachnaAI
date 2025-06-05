@@ -5,6 +5,7 @@ from config.settings import settings
 from app.routes.auth_routes import router as auth_router
 from app.routes.document_routes import router as document_router
 from app.routes.chromadb_routes import router as chromadb_router
+from app.routes.question_routes import router as question_router
 
 app = FastAPI(
     title="Question Generator API",
@@ -27,6 +28,8 @@ app.include_router(auth_router)
 app.include_router(document_router)
 # Include ChromaDB routes
 app.include_router(chromadb_router)
+# Include question routes
+app.include_router(question_router)
 
 @app.get("/")
 async def read_root():

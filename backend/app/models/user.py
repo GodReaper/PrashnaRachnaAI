@@ -19,6 +19,8 @@ class User(Base):
     # Relationships
     documents = relationship("Document", back_populates="user", cascade="all, delete-orphan")
     questions = relationship("Question", back_populates="user", cascade="all, delete-orphan")
+    question_feedbacks = relationship("QuestionFeedback", back_populates="user", cascade="all, delete-orphan")
+    question_sets = relationship("QuestionSet", back_populates="user", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<User(id={self.id}, email='{self.email}', clerk_id='{self.clerk_user_id}')>" 
