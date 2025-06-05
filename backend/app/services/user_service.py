@@ -37,10 +37,38 @@ class UserService:
     @staticmethod
     def get_or_create_user(db: Session, user_data: Dict[str, Any]) -> User:
         """Get existing user or create new one"""
-        user = UserService.get_user_by_clerk_id(db, user_data["clerk_user_id"])
-        if not user:
+        # Validate input data
+        clerk_user_id = user_data.get("clerk_user_id")
+        if not clerk_user_id:
+            raise ValueError("clerk_user_id is required")
+        
+        # Email can be empty initially - will be updated when available
+        email = user_data.get("email", "") or ""
+        
+        # First, try to get existing user
+        user = UserService.get_user_by_clerk_id(db, clerk_user_id)
+        if user:
+            return user
+        
+        # User doesn't exist, try to create
+        try:
             user = UserService.create_user(db, user_data)
-        return user
+            return user
+        except ValueError as e:
+            if "User already exists" in str(e):
+                # Race condition: user was created between our check and creation
+                # Try to get the user again
+                user = UserService.get_user_by_clerk_id(db, clerk_user_id)
+                if user:
+                    return user
+                else:
+                    # This shouldn't happen, but handle it gracefully
+                    raise ValueError(f"Failed to create or retrieve user for clerk_user_id: {clerk_user_id}")
+            else:
+                # Re-raise other ValueError exceptions
+                raise
+        except Exception as e:
+            raise ValueError(f"Database error during user creation: {str(e)}")
     
     @staticmethod
     def update_user(db: Session, user_id: int, update_data: Dict[str, Any]) -> Optional[User]:
