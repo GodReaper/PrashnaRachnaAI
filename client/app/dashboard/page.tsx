@@ -188,6 +188,64 @@ export default async function Dashboard() {
           </div>
         </div>
 
+        {/* Task 8 Complete Status */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-green-900 mb-4">
+            ✅ Task 8 Complete: Question Generation UI with Validation
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">🛡️ Zod Validation</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Question type validation</li>
+                <li>• Bloom&apos;s level validation</li>
+                <li>• Number range validation (1-50)</li>
+                <li>• Difficulty level validation</li>
+              </ul>
+            </div>
+            
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">🎯 Question Types</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Multiple Choice (MCQ)</li>
+                <li>• Fill in the Blank</li>
+                <li>• True/False</li>
+                <li>• Short Answer</li>
+              </ul>
+            </div>
+            
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">🧠 Bloom&apos;s Taxonomy</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Remember, Understand</li>
+                <li>• Apply, Analyze</li>
+                <li>• Evaluate, Create</li>
+                <li>• Color-coded interface</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-white border border-green-200 rounded p-4">
+            <h3 className="font-semibold text-green-900 mb-2">🧪 Test Question Generation Validation</h3>
+            <p className="text-green-800 text-sm mb-3">
+              Test the Zod validation with various input combinations:
+            </p>
+            <div className="flex space-x-3">
+              <Link href="/test-question-generation">
+                <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
+                  Test Validation
+                </button>
+              </Link>
+              <Link href="/upload">
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
+                  Test Full Workflow
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* App Router & Protected Routes Status */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h2 className="text-lg font-bold text-blue-900 mb-4">
@@ -214,11 +272,11 @@ export default async function Dashboard() {
             </div>
             
             <div className="bg-white border border-blue-200 rounded p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">✅ Task 7 Complete</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">✅ Task 7 & 8 Complete</h3>
               <ul className="text-blue-800 text-sm space-y-1">
                 <li>• Left sidebar implemented</li>
-                <li>• Previous questions display</li>
-                <li>• Question history management</li>
+                <li>• Question generation UI</li>
+                <li>• Zod validation working</li>
               </ul>
             </div>
           </div>
