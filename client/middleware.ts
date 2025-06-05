@@ -1,12 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
-const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/upload(.*)', '/questions(.*)']);
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/upload(.*)', '/questions(.*)', '/test-upload(.*)']);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId } = await auth();
   
-  // Protect dashboard, upload, and questions routes
+  // Protect dashboard, upload, questions, and test-upload routes
   if (isProtectedRoute(req)) {
     if (!userId) {
       return NextResponse.redirect(new URL('/', req.url));
