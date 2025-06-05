@@ -18,7 +18,7 @@ export default async function Dashboard() {
           <div className="flex justify-between h-16">
             <div className="flex items-center space-x-8">
               <Link href="/dashboard" className="text-xl font-bold text-gray-800">
-                Question Generator
+               Prashna Rachna AI
               </Link>
               <div className="hidden md:flex space-x-4">
                 <Link href="/dashboard" className="text-blue-600 font-medium">
@@ -137,6 +137,57 @@ export default async function Dashboard() {
           </div>
         </div>
 
+        {/* Task 7 Complete Status */}
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-green-900 mb-4">
+            ✅ Task 7 Complete: Left Sidebar for Previous Questions
+          </h2>
+          
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">📋 Sidebar Features</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Search documents</li>
+                <li>• Filter by difficulty</li>
+                <li>• Document type icons</li>
+                <li>• Upload new documents</li>
+              </ul>
+            </div>
+            
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">❓ Question Display</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Interactive question cards</li>
+                <li>• Voting system (up/down)</li>
+                <li>• Bloom&apos;s Taxonomy levels</li>
+                <li>• Multiple question types</li>
+              </ul>
+            </div>
+            
+            <div className="bg-white border border-green-200 rounded p-4">
+              <h3 className="font-semibold text-green-900 mb-2">🎯 Question Types</h3>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Multiple Choice (MCQ)</li>
+                <li>• Fill in the Blank</li>
+                <li>• True/False</li>
+                <li>• Short Answer</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="bg-white border border-green-200 rounded p-4">
+            <h3 className="font-semibold text-green-900 mb-2">🧪 Test Questions Interface</h3>
+            <p className="text-green-800 text-sm mb-3">
+              View the questions interface with mock data and interactive features:
+            </p>
+            <Link href="/questions">
+              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
+                View Questions Interface
+              </button>
+            </Link>
+          </div>
+        </div>
+
         {/* App Router & Protected Routes Status */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h2 className="text-lg font-bold text-blue-900 mb-4">
@@ -163,9 +214,9 @@ export default async function Dashboard() {
             </div>
             
             <div className="bg-white border border-blue-200 rounded p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">🚀 Next: Task 7</h3>
+              <h3 className="font-semibold text-blue-900 mb-2">✅ Task 7 Complete</h3>
               <ul className="text-blue-800 text-sm space-y-1">
-                <li>• Left sidebar implementation</li>
+                <li>• Left sidebar implemented</li>
                 <li>• Previous questions display</li>
                 <li>• Question history management</li>
               </ul>
