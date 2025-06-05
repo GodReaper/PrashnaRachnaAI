@@ -47,6 +47,9 @@ A comprehensive platform for generating educational questions from uploaded docu
      - Database: `question_generator`
      - Username: `postgres` 
      - Password: `password123`
+   - **ChromaDB**: http://localhost:8001
+     - Vector database for document chunks
+     - API endpoint: `http://localhost:8001/api/v1`
    - **pgAdmin**: http://localhost:8080
      - Email: `admin@questiongenerator.com`
      - Password: `admin123`
@@ -148,6 +151,9 @@ alembic upgrade head
 # Test authentication
 python test_auth.py
 
+# Test ChromaDB setup
+python test_chromadb_setup.py
+
 # API documentation
 # Visit: http://localhost:8000/docs
 ```
@@ -157,6 +163,7 @@ python test_auth.py
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
+- **ChromaDB**: http://localhost:8001
 - **pgAdmin**: http://localhost:8080
 - **PostgreSQL**: localhost:5432
 
@@ -180,6 +187,11 @@ CLERK_JWT_KEY=your_jwt_key
 
 # Database
 DATABASE_URL=postgresql://postgres:password123@localhost:5432/question_generator
+
+# ChromaDB
+CHROMADB_HOST=localhost
+CHROMADB_PORT=8001
+CHROMADB_URL=http://localhost:8001
 
 # API
 API_HOST=0.0.0.0

@@ -31,7 +31,7 @@ else
 fi
 
 # Start Docker services
-echo "🚀 Starting PostgreSQL and pgAdmin..."
+echo "🚀 Starting PostgreSQL, ChromaDB and pgAdmin..."
 docker-compose up -d
 
 # Wait for PostgreSQL to be ready
@@ -55,6 +55,26 @@ if [ $counter -ge $timeout ]; then
     exit 1
 fi
 
+# Wait for ChromaDB to be ready
+echo "⏳ Waiting for ChromaDB to be ready..."
+counter=0
+
+while [ $counter -lt $timeout ]; do
+    if curl -f http://localhost:8001/api/v2/heartbeat &> /dev/null; then
+        echo "✅ ChromaDB is ready!"
+        break
+    fi
+    sleep 2
+    counter=$((counter + 2))
+    echo "   Waiting... ($counter/${timeout}s)"
+done
+
+if [ $counter -ge $timeout ]; then
+    echo "❌ ChromaDB failed to start within ${timeout} seconds"
+    echo "   Check logs with: docker-compose logs chromadb"
+    exit 1
+fi
+
 # Display service information
 echo ""
 echo "🎉 Docker setup completed successfully!"
@@ -64,6 +84,10 @@ echo "   PostgreSQL: localhost:5432"
 echo "   - Database: question_generator"
 echo "   - Username: postgres"
 echo "   - Password: password123"
+echo ""
+echo "   ChromaDB: http://localhost:8001"
+echo "   - Vector database for document chunks"
+echo "   - API endpoint: http://localhost:8001/api/v1"
 echo ""
 echo "   pgAdmin: http://localhost:8080"
 echo "   - Email: admin@questiongenerator.com"

@@ -26,7 +26,7 @@ if not exist "backend\.env" (
 )
 
 REM Start Docker services
-echo 🚀 Starting PostgreSQL and pgAdmin...
+echo 🚀 Starting PostgreSQL, ChromaDB and pgAdmin...
 docker-compose up -d
 
 REM Wait for PostgreSQL to be ready

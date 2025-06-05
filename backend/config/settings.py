@@ -13,6 +13,13 @@ class Settings:
     # Database Configuration
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:password@localhost:5432/question_generator")
     
+    # ChromaDB Configuration
+    CHROMADB_HOST: str = os.getenv("CHROMADB_HOST", "localhost")
+    CHROMADB_PORT: int = int(os.getenv("CHROMADB_PORT", "8001"))
+    CHROMADB_URL: str = os.getenv("CHROMADB_URL", f"http://{os.getenv('CHROMADB_HOST', 'localhost')}:{os.getenv('CHROMADB_PORT', '8001')}")
+    CHROMADB_COLLECTION_NAME: str = os.getenv("CHROMADB_COLLECTION_NAME", "document_chunks")
+    CHROMADB_DISTANCE_FUNCTION: str = os.getenv("CHROMADB_DISTANCE_FUNCTION", "cosine")
+    
     # API Configuration
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))

@@ -4,6 +4,7 @@ import uvicorn
 from config.settings import settings
 from app.routes.auth_routes import router as auth_router
 from app.routes.document_routes import router as document_router
+from app.routes.chromadb_routes import router as chromadb_router
 
 app = FastAPI(
     title="Question Generator API",
@@ -24,6 +25,8 @@ app.add_middleware(
 app.include_router(auth_router)
 # Include document routes
 app.include_router(document_router)
+# Include ChromaDB routes
+app.include_router(chromadb_router)
 
 @app.get("/")
 async def read_root():

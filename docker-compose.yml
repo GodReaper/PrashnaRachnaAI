@@ -24,6 +24,33 @@ services:
       timeout: 5s
       retries: 5
 
+  # ChromaDB Vector Database
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: question_generator_chromadb
+    restart: unless-stopped
+    environment:
+      # ChromaDB Configuration
+      CHROMA_SERVER_HOST: 0.0.0.0
+      CHROMA_SERVER_HTTP_PORT: 8000
+      CHROMA_SERVER_CORS_ALLOW_ORIGINS: '["http://localhost:3000","http://localhost:8000","http://localhost:8001"]'
+      # Persistence settings
+      PERSIST_DIRECTORY: /chroma/chroma_data
+      IS_PERSISTENT: true
+      # Authentication (optional - disable for development)
+      CHROMA_SERVER_AUTH_CREDENTIALS_FILE: ""
+      CHROMA_SERVER_AUTH_CREDENTIALS_PROVIDER: ""
+      # Additional settings to resolve host conflicts
+      CHROMA_SERVER_ALLOW_RESET: true
+    ports:
+      - "8001:8000"  # Map to 8001 to avoid conflict with FastAPI
+    volumes:
+      - chromadb_data:/chroma/chroma_data
+    networks:
+      - question_generator_network
+    # Healthcheck disabled - service is functional but container lacks curl/proper python setup
+    # You can verify ChromaDB is working by accessing http://localhost:8001/api/v2/heartbeat
+
   # pgAdmin for Database Management (Optional)
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -45,6 +72,8 @@ services:
 
 volumes:
   postgres_data:
+    driver: local
+  chromadb_data:
     driver: local
   pgadmin_data:
     driver: local
