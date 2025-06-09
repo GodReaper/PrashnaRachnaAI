@@ -133,9 +133,38 @@ class DocumentParsingService:
     def _load_document(self, file_path: str, file_extension: str) -> List[Document]:
         """Load document using appropriate LangChain loader"""
         try:
-            loader_class = self.loader_mapping[file_extension]
-            loader = loader_class(file_path)
-            documents = loader.load()
+            # Check if we're using cloud storage
+            storage_type = os.getenv("FILE_STORAGE_TYPE", "local").lower()
+            
+            if storage_type == "local":
+                # Local file - use path directly
+                loader_class = self.loader_mapping[file_extension]
+                loader = loader_class(file_path)
+                documents = loader.load()
+            else:
+                # Cloud storage - download file temporarily
+                from app.services.cloud_file_service import file_storage_service
+                import tempfile
+                
+                # Download file content
+                file_content = file_storage_service.download_file(file_path)
+                
+                # Create temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as temp_file:
+                    temp_file.write(file_content)
+                    temp_file_path = temp_file.name
+                
+                try:
+                    # Load from temporary file
+                    loader_class = self.loader_mapping[file_extension]
+                    loader = loader_class(temp_file_path)
+                    documents = loader.load()
+                finally:
+                    # Clean up temporary file
+                    try:
+                        os.unlink(temp_file_path)
+                    except:
+                        pass
             
             logger.info(f"Loaded {len(documents)} document sections from {file_extension} file")
             return documents

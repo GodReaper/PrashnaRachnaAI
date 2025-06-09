@@ -2,6 +2,8 @@
 
 import React, { useState, useRef } from 'react';
 import { z } from 'zod';
+import { apiClient, type Document } from '../lib/api';
+import { useAuth } from '../lib/hooks/useAuth';
 
 // Zod schema for file validation
 const fileUploadSchema = z.object({
@@ -22,7 +24,7 @@ const fileUploadSchema = z.object({
 
 interface DocumentUploadProps {
   onFileSelect?: (file: File) => void;
-  onUpload?: (file: File) => void;
+  onUpload?: (document: Document) => void;
 }
 
 export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) {
@@ -30,7 +32,12 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState<Document | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Initialize auth
+  useAuth();
 
   const validateFile = (file: File): boolean => {
     try {
@@ -82,10 +89,42 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
     if (!selectedFile) return;
 
     setIsUploading(true);
+    setError('');
+    
     try {
-      // Simulate upload delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      onUpload?.(selectedFile);
+      const response = await apiClient.uploadDocument(selectedFile);
+      
+      if (response.success && response.data) {
+        // Always notify parent component first
+        onUpload?.(response.data);
+        
+        // Handle parsing states - but don't block the upload success
+        if (response.data.processing_status === 'completed') {
+          // Success! Clear the form
+          setSelectedFile(null);
+          setUploadedDocument(null);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        } else {
+          // Document uploaded but needs parsing work - keep it for status tracking
+          setUploadedDocument(response.data);
+          
+          if (response.data.processing_status === 'failed') {
+            setError(`Document parsing failed: ${response.data.error_message || 'Unknown error'}`);
+          } else if (response.data.processing_status === 'processing') {
+            // Wait for processing to complete
+            setIsParsing(true);
+            await waitForParsingCompletion(response.data.id);
+          } else {
+            // Try to trigger parsing
+            setIsParsing(true);
+            await retryParsing(response.data.id);
+          }
+        }
+      } else {
+        setError(response.error || 'Upload failed. Please try again.');
+      }
     } catch (error) {
       console.error('Upload error:', error);
       setError('Upload failed. Please try again.');
@@ -94,9 +133,89 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
     }
   };
 
+  const waitForParsingCompletion = async (documentId: string) => {
+    setIsParsing(true);
+    const maxAttempts = 30; // Wait up to 30 seconds
+    let attempts = 0;
+
+    const checkStatus = async (): Promise<void> => {
+      try {
+        const response = await apiClient.getDocument(documentId);
+        
+        if (response.success && response.data) {
+          // Always update parent with latest document status
+          onUpload?.(response.data);
+          
+          if (response.data.processing_status === 'completed') {
+            // Parsing completed successfully - clear form
+            setSelectedFile(null);
+            setUploadedDocument(null);
+            if (fileInputRef.current) {
+              fileInputRef.current.value = '';
+            }
+            setIsParsing(false);
+            return;
+          } else if (response.data.processing_status === 'failed') {
+            // Parsing failed - keep for retry
+            setUploadedDocument(response.data);
+            setError(`Parsing failed: ${response.data.error_message || 'Unknown error'}`);
+            setIsParsing(false);
+            return;
+          } else if (attempts < maxAttempts) {
+            // Still processing, wait and check again
+            setUploadedDocument(response.data); // Update local state too
+            attempts++;
+            setTimeout(checkStatus, 1000);
+          } else {
+            // Timeout
+            setError('Parsing is taking longer than expected. You can try refreshing or retry parsing.');
+            setIsParsing(false);
+          }
+        } else {
+          setError('Failed to check parsing status.');
+          setIsParsing(false);
+        }
+      } catch (error) {
+        console.error('Error checking parsing status:', error);
+        setError('Failed to check parsing status.');
+        setIsParsing(false);
+      }
+    };
+
+    checkStatus();
+  };
+
+  const retryParsing = async (documentId: string) => {
+    setIsParsing(true);
+    setError('');
+    
+    try {
+      const response = await apiClient.parseDocument(documentId);
+      
+      if (response.success && response.data) {
+        // Parsing started, wait for completion
+        await waitForParsingCompletion(documentId);
+      } else {
+        setError(response.error || 'Failed to start parsing. Please try again.');
+        setIsParsing(false);
+      }
+    } catch (error) {
+      console.error('Parse error:', error);
+      setError('Failed to parse document. Please try again.');
+      setIsParsing(false);
+    }
+  };
+
+  // Helper function for external retry calls
+  const handleRetryParsing = async (documentId: string) => {
+    await retryParsing(documentId);
+  };
+
   const resetUpload = () => {
     setSelectedFile(null);
+    setUploadedDocument(null);
     setError('');
+    setIsParsing(false);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -174,7 +293,39 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
                 <svg className="w-5 h-5 text-red-400 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <span className="text-red-800 text-sm font-medium">{error}</span>
+                <div className="flex-1">
+                  <span className="text-red-800 text-sm font-medium">{error}</span>
+                  {/* Show retry button if document was uploaded but parsing failed */}
+                  {uploadedDocument && uploadedDocument.processing_status === 'failed' && (
+                    <div className="mt-2">
+                      <button
+                        onClick={() => handleRetryParsing(uploadedDocument.id)}
+                        disabled={isParsing}
+                        className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-3 py-1 rounded text-sm font-medium"
+                      >
+                        {isParsing ? 'Retrying...' : 'Retry Parsing'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Parsing Progress Indicator */}
+          {isParsing && (
+            <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center">
+                <svg className="animate-spin h-5 w-5 text-blue-400 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <div>
+                  <p className="text-blue-800 font-medium">Processing document content...</p>
+                  <p className="text-blue-600 text-sm">
+                    Extracting text and creating searchable chunks for AI question generation.
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -210,9 +361,9 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
           <div className="mt-6">
             <button
               onClick={handleUpload}
-              disabled={isUploading}
+              disabled={isUploading || isParsing}
               className={`w-full font-medium py-3 px-6 rounded-lg transition-colors ${
-                isUploading
+                isUploading || isParsing
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
@@ -223,7 +374,15 @@ export function DocumentUpload({ onFileSelect, onUpload }: DocumentUploadProps) 
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing Document...
+                  Uploading Document...
+                </div>
+              ) : isParsing ? (
+                <div className="flex items-center justify-center">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Parsing Document...
                 </div>
               ) : (
                 'Upload & Process Document'

@@ -69,6 +69,7 @@ async def upload_document(
             mime_type=file.content_type
         )
         
+        # Return document with 'uploaded' status - frontend will trigger parsing
         return DocumentUploadResponse.from_orm(document)
         
     except Exception as e:

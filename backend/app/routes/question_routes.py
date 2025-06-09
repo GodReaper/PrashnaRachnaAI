@@ -31,7 +31,7 @@ class QuestionGenerationRequest(BaseModel):
     bloom_level: str = Field(default="understand", description="Bloom's taxonomy level")
     difficulty: str = Field(default="intermediate", description="Difficulty level")
     num_questions: int = Field(default=7, ge=1, le=20, description="Number of questions to generate")
-    model: Optional[str] = Field(None, description="Specific Ollama model to use")
+    model: Optional[str] = Field(default="deepseek-r1:1.5b", description="Specific Ollama model to use")
 
 class QuestionFeedbackRequest(BaseModel):
     """Request schema for question feedback"""
@@ -67,10 +67,18 @@ async def generate_questions(
         # Validate document access
         documents = []
         for doc_id in request.document_ids:
-            doc = DocumentService.get_document_by_id(db, int(doc_id), user.id)
-            if not doc:
-                raise HTTPException(status_code=404, detail=f"Document {doc_id} not found or access denied")
-            documents.append(doc)
+            try:
+                # Try to convert to int, handle conversion errors
+                doc_id_int = int(doc_id)
+                doc = DocumentService.get_document_by_id(db, doc_id_int, user.id)
+                if not doc:
+                    raise HTTPException(status_code=404, detail=f"Document {doc_id} not found or access denied")
+                documents.append(doc)
+            except ValueError:
+                raise HTTPException(status_code=400, detail=f"Invalid document ID format: {doc_id}")
+            except Exception as e:
+                logger.error(f"Error accessing document {doc_id}: {e}")
+                raise HTTPException(status_code=500, detail=f"Error accessing document {doc_id}")
         
         # Get LLM-ready chunks from documents
         all_chunks = []

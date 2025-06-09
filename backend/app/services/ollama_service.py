@@ -5,6 +5,7 @@ Supports DeepSeek R1, Llama, and other open-source models with LangChain abstrac
 
 import logging
 import json
+import re
 import asyncio
 from typing import Dict, Any, List, Optional, Union
 from datetime import datetime
@@ -192,6 +193,60 @@ class OllamaService:
         
         return model_name
     
+    def _parse_json_with_repair(self, json_str: str) -> dict:
+        """Parse JSON with automatic repair for common issues"""
+        
+        try:
+            # First try normal parsing
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            logger.warning(f"Initial JSON parse failed: {e}, attempting repair...")
+            
+            try:
+                # Common JSON repair strategies
+                repaired_json = json_str
+                
+                # Fix common issues
+                # 1. Remove trailing commas
+                repaired_json = re.sub(r',(\s*[}\]])', r'\1', repaired_json)
+                
+                # 2. Fix missing commas between objects/arrays
+                repaired_json = re.sub(r'}\s*{', '},{', repaired_json)
+                repaired_json = re.sub(r']\s*\[', '],[', repaired_json)
+                
+                # 3. Fix unquoted keys (simple cases)
+                repaired_json = re.sub(r'(\w+):', r'"\1":', repaired_json)
+                
+                # 4. Fix single quotes to double quotes
+                repaired_json = repaired_json.replace("'", '"')
+                
+                # 5. Remove any non-JSON content at the end
+                last_brace = repaired_json.rfind('}')
+                if last_brace != -1:
+                    repaired_json = repaired_json[:last_brace + 1]
+                
+                return json.loads(repaired_json)
+                
+            except json.JSONDecodeError as repair_error:
+                logger.error(f"JSON repair also failed: {repair_error}")
+                logger.error(f"Original JSON: {json_str[:500]}...")
+                
+                # Last resort: extract just the questions array if possible
+                try:
+                    questions_match = re.search(r'"questions"\s*:\s*(\[.*?\])', json_str, re.DOTALL)
+                    if questions_match:
+                        questions_array = questions_match.group(1)
+                        return {"questions": json.loads(questions_array)}
+                except:
+                    pass
+                
+                # Final fallback: return error structure
+                return {
+                    "error": "Failed to parse JSON",
+                    "raw_response": json_str,
+                    "parse_error": str(repair_error)
+                }
+    
     def generate_response(
         self,
         prompt: str,
@@ -266,11 +321,19 @@ class OllamaService:
                     # Try to parse as JSON manually
                     try:
                         if response_text and response_text.strip():
-                            # Handle DeepSeek thinking patterns - extract JSON after </think>
+                            # Handle DeepSeek thinking patterns - extract JSON after </think> or <think>
+                            json_part = response_text.strip()
+                            
                             if "</think>" in response_text:
+                                # Extract content after </think>
                                 json_part = response_text.split("</think>", 1)[1].strip()
-                            else:
-                                json_part = response_text.strip()
+                            elif "<think>" in response_text:
+                                # Handle case where thinking starts but doesn't close properly
+                                # Find the first opening brace after <think>
+                                think_pos = response_text.find("<think>")
+                                json_start_after_think = response_text.find('{', think_pos)
+                                if json_start_after_think != -1:
+                                    json_part = response_text[json_start_after_think:].strip()
                             
                             # Remove any leading/trailing text that's not JSON
                             json_start = json_part.find('{')
@@ -278,9 +341,10 @@ class OllamaService:
                             
                             if json_start != -1 and json_end > json_start:
                                 clean_json = json_part[json_start:json_end]
-                                response_content = json.loads(clean_json)
+                                response_content = self._parse_json_with_repair(clean_json)
                             else:
-                                response_content = json.loads(json_part)
+                                # Fallback: try to parse the whole part as JSON
+                                response_content = self._parse_json_with_repair(json_part)
                         else:
                             response_content = {"error": "Empty response from LLM", "raw_response": response_text}
                     except json.JSONDecodeError as e:
@@ -437,11 +501,19 @@ class OllamaService:
                     # Try to parse as JSON manually
                     try:
                         if response_text and response_text.strip():
-                            # Handle DeepSeek thinking patterns - extract JSON after </think>
+                            # Handle DeepSeek thinking patterns - extract JSON after </think> or <think>
+                            json_part = response_text.strip()
+                            
                             if "</think>" in response_text:
+                                # Extract content after </think>
                                 json_part = response_text.split("</think>", 1)[1].strip()
-                            else:
-                                json_part = response_text.strip()
+                            elif "<think>" in response_text:
+                                # Handle case where thinking starts but doesn't close properly
+                                # Find the first opening brace after <think>
+                                think_pos = response_text.find("<think>")
+                                json_start_after_think = response_text.find('{', think_pos)
+                                if json_start_after_think != -1:
+                                    json_part = response_text[json_start_after_think:].strip()
                             
                             # Remove any leading/trailing text that's not JSON
                             json_start = json_part.find('{')
@@ -449,9 +521,10 @@ class OllamaService:
                             
                             if json_start != -1 and json_end > json_start:
                                 clean_json = json_part[json_start:json_end]
-                                response_content = json.loads(clean_json)
+                                response_content = self._parse_json_with_repair(clean_json)
                             else:
-                                response_content = json.loads(json_part)
+                                # Fallback: try to parse the whole part as JSON
+                                response_content = self._parse_json_with_repair(json_part)
                         else:
                             response_content = {"error": "Empty response from LLM", "raw_response": response_text}
                     except json.JSONDecodeError as e:

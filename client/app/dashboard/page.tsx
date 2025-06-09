@@ -27,6 +27,9 @@ export default async function Dashboard() {
                 <Link href="/upload" className="text-gray-600 hover:text-gray-800 font-medium">
                   Upload Document
                 </Link>
+                <Link href="/generate" className="text-gray-600 hover:text-gray-800 font-medium">
+                  Generate Questions
+                </Link>
                 <Link href="/questions" className="text-gray-600 hover:text-gray-800 font-medium">
                   My Questions
                 </Link>
@@ -59,7 +62,7 @@ export default async function Dashboard() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <Link href="/upload">
             <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-blue-500">
               <div className="flex items-center">
@@ -68,7 +71,21 @@ export default async function Dashboard() {
                 </svg>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Upload Document</h3>
-                  <p className="text-gray-600">Upload PDF, DOCX, or PPTX files to generate questions</p>
+                  <p className="text-gray-600">Upload PDF, DOCX, or PPTX files</p>
+                </div>
+              </div>
+            </div>
+          </Link>
+
+          <Link href="/generate">
+            <div className="bg-white shadow rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer border-l-4 border-purple-500">
+              <div className="flex items-center">
+                <svg className="h-8 w-8 text-purple-500 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Generate Questions</h3>
+                  <p className="text-gray-600">AI-powered question generation</p>
                 </div>
               </div>
             </div>
@@ -82,205 +99,14 @@ export default async function Dashboard() {
                 </svg>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">My Questions</h3>
-                  <p className="text-gray-600">View and manage your generated questions</p>
+                  <p className="text-gray-600">View and manage questions</p>
                 </div>
               </div>
             </div>
           </Link>
         </div>
 
-        {/* Task 6 Complete Status */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-bold text-green-900 mb-4">
-            ✅ Task 6 Complete: Document Upload with Validation
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🔧 Zod Validation</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• File type validation</li>
-                <li>• File size limits (10MB)</li>
-                <li>• Error message display</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🎯 UI Features</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Drag & drop interface</li>
-                <li>• File preview display</li>
-                <li>• Upload progress indication</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">📋 Supported Files</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• PDF documents</li>
-                <li>• Word files (.docx)</li>
-                <li>• PowerPoint (.pptx)</li>
-              </ul>
-            </div>
-          </div>
 
-          <div className="bg-white border border-green-200 rounded p-4">
-            <h3 className="font-semibold text-green-900 mb-2">🧪 Test Validation</h3>
-            <p className="text-green-800 text-sm mb-3">
-              Test the file upload validation with different file types:
-            </p>
-            <Link href="/test-upload">
-              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
-                Test Upload Validation
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Task 7 Complete Status */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-bold text-green-900 mb-4">
-            ✅ Task 7 Complete: Left Sidebar for Previous Questions
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">📋 Sidebar Features</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Search documents</li>
-                <li>• Filter by difficulty</li>
-                <li>• Document type icons</li>
-                <li>• Upload new documents</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">❓ Question Display</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Interactive question cards</li>
-                <li>• Voting system (up/down)</li>
-                <li>• Bloom&apos;s Taxonomy levels</li>
-                <li>• Multiple question types</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🎯 Question Types</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Multiple Choice (MCQ)</li>
-                <li>• Fill in the Blank</li>
-                <li>• True/False</li>
-                <li>• Short Answer</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="bg-white border border-green-200 rounded p-4">
-            <h3 className="font-semibold text-green-900 mb-2">🧪 Test Questions Interface</h3>
-            <p className="text-green-800 text-sm mb-3">
-              View the questions interface with mock data and interactive features:
-            </p>
-            <Link href="/questions">
-              <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
-                View Questions Interface
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Task 8 Complete Status */}
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-          <h2 className="text-lg font-bold text-green-900 mb-4">
-            ✅ Task 8 Complete: Question Generation UI with Validation
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🛡️ Zod Validation</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Question type validation</li>
-                <li>• Bloom&apos;s level validation</li>
-                <li>• Number range validation (1-50)</li>
-                <li>• Difficulty level validation</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🎯 Question Types</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Multiple Choice (MCQ)</li>
-                <li>• Fill in the Blank</li>
-                <li>• True/False</li>
-                <li>• Short Answer</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-green-200 rounded p-4">
-              <h3 className="font-semibold text-green-900 mb-2">🧠 Bloom&apos;s Taxonomy</h3>
-              <ul className="text-green-800 text-sm space-y-1">
-                <li>• Remember, Understand</li>
-                <li>• Apply, Analyze</li>
-                <li>• Evaluate, Create</li>
-                <li>• Color-coded interface</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="bg-white border border-green-200 rounded p-4">
-            <h3 className="font-semibold text-green-900 mb-2">🧪 Test Question Generation Validation</h3>
-            <p className="text-green-800 text-sm mb-3">
-              Test the Zod validation with various input combinations:
-            </p>
-            <div className="flex space-x-3">
-              <Link href="/test-question-generation">
-                <button className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded">
-                  Test Validation
-                </button>
-              </Link>
-              <Link href="/upload">
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">
-                  Test Full Workflow
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* App Router & Protected Routes Status */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-lg font-bold text-blue-900 mb-4">
-            🔒 Protected Routes Status
-          </h2>
-          
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="bg-white border border-blue-200 rounded p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">✅ Task 5 Routes</h3>
-              <ul className="text-blue-800 text-sm space-y-1">
-                <li>• /dashboard (authenticated)</li>
-                <li>• /upload (authenticated)</li>
-                <li>• /questions (authenticated)</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-blue-200 rounded p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">🛡️ Middleware Protection</h3>
-              <ul className="text-blue-800 text-sm space-y-1">
-                <li>• Auto-redirect on auth state</li>
-                <li>• Route protection enabled</li>
-                <li>• Seamless navigation</li>
-              </ul>
-            </div>
-            
-            <div className="bg-white border border-blue-200 rounded p-4">
-              <h3 className="font-semibold text-blue-900 mb-2">✅ Task 7 & 8 Complete</h3>
-              <ul className="text-blue-800 text-sm space-y-1">
-                <li>• Left sidebar implemented</li>
-                <li>• Question generation UI</li>
-                <li>• Zod validation working</li>
-              </ul>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
