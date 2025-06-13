@@ -1,250 +1,111 @@
-# Question Generator Platform
+# Prashna Rachna – AI Question Generation Platform
 
-A comprehensive platform for generating educational questions from uploaded documents using AI agents, built with Next.js frontend and FastAPI backend.
+A full-stack, production-ready platform for document upload, semantic chunking, and AI-powered question generation. Built with Next.js (frontend), FastAPI (backend), PostgreSQL, ChromaDB, Clerk authentication, and hybrid file/cloud storage.
 
-## 🏗️ Architecture
+---
 
-- **Frontend**: Next.js with Clerk authentication
-- **Backend**: FastAPI with Clerk JWT verification
-- **Database**: PostgreSQL with SQLAlchemy ORM
-- **Vector Store**: ChromaDB for semantic search
-- **AI**: CrewAI agents for question generation
+## 🏗️ Monorepo Structure
 
-## 🚀 Quick Start with Docker (Recommended)
+```
+.
+├── backend/    # FastAPI backend (API, parsing, LLM, storage)
+├── client/     # Next.js frontend (UI, auth, upload, question gen)
+├── docs/       # Project documentation
+├── docker-compose.yml  # Multi-service orchestration
+└── README.md   # (this file)
+```
 
-### Prerequisites
-- [Docker Desktop](https://docs.docker.com/get-docker/) installed and running
-- [Git](https://git-scm.com/) installed
+---
 
-### Setup Database with Docker
+## 🚀 Features
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd question-generator
-   ```
+- **User Authentication**: Clerk (SSO, JWT, session)
+- **Document Upload**: PDF, DOCX, PPTX (validated)
+- **Cloud Storage Ready**: Local for dev, S3/GCS/Azure for prod
+- **Semantic Parsing**: LangChain chunking, ChromaDB vector search
+- **AI Question Generation**: LLM-powered, MCQ, Fill-in-the-Blank, True/False, Bloom's Taxonomy
+- **Feedback & History**: Store and retrieve user feedback and question history
+- **Production-Ready**: Scalable, secure, cloud-native
 
-2. **Start PostgreSQL with Docker**:
-   
-   **On Linux/Mac**:
-   ```bash
-   chmod +x docker-setup.sh
-   ./docker-setup.sh
-   ```
-   
-   **On Windows**:
-   ```cmd
-   docker-setup.bat
-   ```
-   
-   **Or manually**:
-   ```bash
-   docker-compose up -d
-   ```
+---
 
-3. **Services will be available at**:
-   - **PostgreSQL**: `localhost:5432`
-     - Database: `question_generator`
-     - Username: `postgres` 
-     - Password: `password123`
-   - **ChromaDB**: http://localhost:8001
-     - Vector database for document chunks
-     - API endpoint: `http://localhost:8001/api/v1`
-   - **pgAdmin**: http://localhost:8080
-     - Email: `admin@questiongenerator.com`
-     - Password: `admin123`
+## ⚡ Quickstart (Dev)
 
-### Setup Backend
+### 1. Clone & Setup
 
-1. **Navigate to backend**:
-   ```bash
-   cd backend
-   ```
-
-2. **Create Python environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Configure environment**:
-   ```bash
-   cp env.example .env
-   # Update .env with your Clerk keys
-   ```
-
-5. **Initialize database**:
-   ```bash
-   python init_db.py
-   ```
-
-6. **Start the API server**:
-   ```bash
-   python main.py
-   ```
-
-### Setup Frontend
-
-1. **Navigate to frontend**:
-   ```bash
-   cd client
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-3. **Configure environment**:
-   ```bash
-   cp .env.example .env.local
-   # Update with your Clerk keys
-   ```
-
-4. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-## 🔧 Development Commands
-
-### Docker Commands
 ```bash
-# Start all services
-docker-compose up -d
-
-# Stop all services
-docker-compose down
-
-# View logs
-docker-compose logs
-
-# Restart services
-docker-compose restart
-
-# Remove everything (including data)
-docker-compose down -v
+git clone <your-repo-url>
+cd <repo-root>
 ```
 
-### Database Management
+### 2. Backend (API)
+
 ```bash
-# Check setup
-python setup_check.py
-
-# Initialize tables
-python init_db.py
-
-# Create migration
-alembic revision --autogenerate -m "Description"
-
-# Apply migrations
-alembic upgrade head
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+cp env.example .env  # Edit .env for DB, Clerk, storage
+python init_db.py    # Or: alembic upgrade head
+uvicorn main:app --reload
 ```
+- Docs: [backend/README.md](backend/README.md)
 
-### Testing
+### 3. Frontend (Web UI)
+
 ```bash
-# Test authentication
-python test_auth.py
-
-# Test ChromaDB setup
-python test_chromadb_setup.py
-
-# API documentation
-# Visit: http://localhost:8000/docs
+cd client
+npm install
+npm run dev
 ```
+- Docs: [client/README.md](client/README.md)
 
-## 📊 Service URLs
+### 4. Open in Browser
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend API: [http://localhost:8000](http://localhost:8000)
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **ChromaDB**: http://localhost:8001
-- **pgAdmin**: http://localhost:8080
-- **PostgreSQL**: localhost:5432
+---
 
-## 🛠️ Manual PostgreSQL Setup
+## ☁️ Cloud & Production
 
-If you prefer not to use Docker:
+- **Cloud Storage**: Set `FILE_STORAGE_TYPE` in backend `.env` to `aws_s3`, `gcp`, or `azure` and provide credentials
+- **Docker Compose**: Use `docker-compose.yml` for full-stack orchestration
+- **Deployment Guide**: See [backend/docs/deployment_guide.md](backend/docs/deployment_guide.md)
 
-1. Install PostgreSQL locally
-2. Create database: `question_generator`
-3. Update `DATABASE_URL` in `backend/.env`
-4. Run `python init_db.py`
+---
 
-## 📝 Environment Variables
+## 🧩 Architecture
 
-### Backend (`backend/.env`)
-```env
-# Clerk Authentication
-CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-CLERK_JWT_KEY=your_jwt_key
+- **Frontend**: Next.js (React, Clerk, Zod, modern UI/UX)
+- **Backend**: FastAPI (async, Pydantic, LangChain, ChromaDB, PostgreSQL)
+- **Storage**: Hybrid (local for dev, S3/GCS/Azure for prod)
+- **Auth**: Clerk (JWT, session, SSO)
+- **Vector Search**: ChromaDB
+- **LLM**: Ollama/DeepSeek/other (configurable)
 
-# Database
-DATABASE_URL=postgresql://postgres:password123@localhost:5432/question_generator
+---
 
-# ChromaDB
-CHROMADB_HOST=localhost
-CHROMADB_PORT=8001
-CHROMADB_URL=http://localhost:8001
+## 📝 Contributing
 
-# API
-API_HOST=0.0.0.0
-API_PORT=8000
-DEBUG=True
-```
+1. Fork the repo
+2. Create a feature branch
+3. Commit your changes
+4. Open a PR!
 
-### Frontend (`client/.env.local`)
-```env
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
-CLERK_SECRET_KEY=sk_test_...
-```
+---
 
-## 🔍 Troubleshooting
+## 📄 License
 
-### Docker Issues
-- Ensure Docker Desktop is running
-- Check port 5432 is not already in use
-- Run `docker-compose logs postgres` for database logs
+MIT License
 
-### Database Connection
-- Verify PostgreSQL is running: `docker-compose ps`
-- Test connection: `python setup_check.py`
-- Reset database: `docker-compose down -v && docker-compose up -d`
+---
 
-### Authentication Issues
-- Verify Clerk keys are set correctly
-- Check JWT token format in API requests
-- Test with: `python test_auth.py`
+**Questions?**  
+See [backend/docs/deployment_guide.md](backend/docs/deployment_guide.md) or open an issue! 
 
-## 📚 Project Structure
-
-```
-question-generator/
-├── client/                 # Next.js frontend
-├── backend/               # FastAPI backend
-│   ├── app/
-│   │   ├── models/       # Database models
-│   │   ├── routes/       # API routes
-│   │   └── services/     # Business logic
-│   ├── auth/             # Authentication
-│   ├── config/           # Configuration
-│   └── alembic/          # Database migrations
-├── docker-compose.yml    # Docker services
-└── init-scripts/         # Database initialization
-```
-
-## 🚦 Development Workflow
-
-1. Start Docker services: `./docker-setup.sh`
-2. Initialize backend database: `cd backend && python init_db.py`
-3. Start backend API: `python main.py`
-4. Start frontend: `cd client && npm run dev`
-5. Begin development!
-
-For detailed backend setup, see [backend/README.md](backend/README.md). 
+##TODO 
+- Check if the document already exists if yes dont parse it again 
+- Add a chat interface after question generation to modify the generated questions and personalize them 
+- Add curriculum feature where users can select from curriculum like cbse etc or upload their own curriculum for better alignment 
+- CrewAI Agents for question generation 
+- Fix ai hallucination its not generating the specified number of questions everytime 
